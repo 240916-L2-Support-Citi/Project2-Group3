@@ -5,8 +5,8 @@ import requests
 import psycopg 
 # imports ripped from p2 specs - a lot of them are useless for this script
 # API endpoints
-EC2_DNS = 'ec2-52-71-30-180.compute-1.amazonaws.com'
-url = f'http://ec2-52-71-30-180.compute-1.amazonaws.com:5000'
+EC2_DNS = ''
+url = f'http://{EC2_DNS}.compute-1.amazonaws.com:5000'
 metricsUrl="/metrics"
 createUrl = "/api/items"
 deleteUrl = "/api/items/{0}"#needs to be formatted
@@ -26,7 +26,7 @@ TODO
 # obtain a token
 def db_logger(log_level, status_code, message):
     try:
-        conn = psycopg.connect("dbname=api_logs user=obaidahmed")
+        conn = psycopg.connect("dbname=api_logs user=")
         cur = conn.cursor()
 
         cur.execute("""
