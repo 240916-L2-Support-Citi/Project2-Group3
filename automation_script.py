@@ -6,7 +6,7 @@ import psycopg
 # imports ripped from p2 specs - a lot of them are useless for this script
 # API endpoints
 EC2_DNS = ''
-url = f'http://{EC2_DNS}.compute-1.amazonaws.com:5000'
+url = f'http://ec2-52-71-30-180.compute-1.amazonaws.com:5000/'
 metricsUrl="/metrics"
 createUrl = "/api/items"
 deleteUrl = "/api/items/{0}"#needs to be formatted
@@ -53,11 +53,15 @@ def tokenCall():
     }
     try:
         response = requests.post(url + tokenUrl, headers=userHeader)
-        temp=response.json()
-        token=temp.get('token')
         status_code = response.status_code
-        db_logger('INFO', status_code, f"Success: Token obtained: {token}")
-        return [token, temp, response.status_code]
+        if status_code == 200:
+            temp = response.json()
+            token = temp.get('token')
+            db_logger('INFO', status_code, f"Success: Token obtained: {token}")
+            return [token, temp, status_code]
+        else:
+            db_logger('ERROR', status_code, f"Failed to obtain token. Status code: {status_code}")
+            return [None, None, status_code]
     except Exception as e:
         db_logger('ERROR', status_code, f"Failed to obtain token: {e}")
     
@@ -70,13 +74,15 @@ def createCall():
     }
     try:
         response = requests.post(url + createUrl, headers=creationHeader) # returns {"status": "item created", "item_id": item_id}
-        temp=response.json()
-        #extract item_id
         status_code = response.status_code
-        temp_item_id=temp.get('item_id')
-        print(temp)
-        db_logger('INFO', status_code, f"Item created successfully: {temp_item_id}")
-        return [temp_item_id, temp, response.status_code]
+        if status_code == 201:
+            temp = response.json()
+            temp_item_id = temp.get('item_id')
+            db_logger('INFO', status_code, f"Item created successfully: {temp_item_id}")
+            return [temp_item_id, temp, status_code]
+        else:
+            db_logger('ERROR', status_code, f"Failed to create item. Status code: {status_code}")
+            return [None, None, status_code]
     except Exception as e:
         db_logger('ERROR', status_code, f"Failed to create item: {e}")
 
@@ -92,20 +98,16 @@ def deleteCall():
         #actually make the api call
         response = requests.delete(url + tempDeleteUrl, headers=deletionHeader)
         # we don't need to store anything from it other than the response itself
-        temp=response.json()
-        code_return = -1
-        status_return="failed function"
-        print("entire delete response:",temp)
-        if 'status' in temp:
-            status_return=temp.get('status')
-        elif 'error' in temp:
-            status_return=temp.get('error')
-        #code_return = response.status_code
-        #print("in delete",[status_return,code_return])
         status_code = response.status_code
         print(response)
-        db_logger('INFO', status_code, f"Item deleted successfully: {temp_item_id}")
-        return [status_return,temp, response.status_code]
+        if status_code == 200:
+            temp = response.json()
+            status_return = temp.get('status', 'Unknown status')
+            db_logger('INFO', status_code, f"Item deleted successfully: {temp_item_id}")
+            return [status_return, temp, status_code]
+        else:
+            db_logger('ERROR', status_code, f"Failed to delete item. Status code: {status_code}")
+            return ["failed", None, status_code]
     except Exception as e:
         db_logger('ERROR', status_code, f"Failed to delete item {temp_item_id}: {e}")
 
