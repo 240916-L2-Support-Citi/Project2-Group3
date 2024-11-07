@@ -1,6 +1,6 @@
 from flask import Flask, jsonify
 #from prometheus_client import Counter, Histogram, Gauge, generate_latest
-import time#, random, string, logging
+import time, random#, string, logging
 import requests
 import psycopg 
 # imports ripped from p2 specs - a lot of them are useless for this script
@@ -118,11 +118,30 @@ def deleteCall():
 if __name__ == "__main__":
     while True:
         sleepTime = 5
+        ranErr = random.randint(0, 5) #0 = create error, 1 = delete error, 2=both error, else ok
         print("Start cycle")
+        #obtain token - no errors possible
         tokenRet = tokenCall()
-        token = tokenRet[0]
+        token = tokenRet[0] # set for create
+        
+        # create item; error possible
+        if ranErr == 0:
+            token=""
+            print("Simulating only Create Error")
+        elif ranErr == 2:
+            token=""
+            print("Simulating Create and Delete Error")
         createRet = createCall()
-        temp_item_id = createRet[0]
+        temp_item_id = createRet[0]# set for delete
+
+        #delete item; error possible
+        if ranErr == 0:
+            print("Delete Skipped")
+            continue
+        elif ranErr == 1 or ranErr == 2:
+            temp_item_id = None
+            print("Simulating Delete Error")
         deleteRet = deleteCall()
+
         print(f"Sleep for {sleepTime}")
         time.sleep(sleepTime)
