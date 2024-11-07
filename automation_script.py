@@ -8,7 +8,7 @@ import time
 import time, random, string
 # imports ripped from p2 specs - a lot of them are useless for this script
 # API endpoints
-EC2_DNS = 'ec2-52-71-30-180.compute-1.amazonaws.com'
+EC2_DNS = ''
 url = f'http://{EC2_DNS}:5000'
 metricsUrl="/metrics"
 createUrl = "/api/items"
@@ -37,8 +37,6 @@ def tokenCall():
     response = requests.post(url + tokenUrl, headers=userHeader)
     temp=response.json()
     token=temp.get('token')
-    #print("in token: ",token)
-    #print("entire token response",temp)
     return [token, temp, response.status_code]
 
 # item creation
@@ -47,22 +45,10 @@ def createCall():
     'User-ID': userID,
     'Token': token
     }
-    # code_return = -1#return code for logging
-    # status_return= "none"#outcome for logging
-
     response = requests.post(url + createUrl, headers=creationHeader) # returns {"status": "item created", "item_id": item_id}
     temp=response.json()
-    #print("entire create response:",temp)
-
-    # if 'status' in temp: # get outcome for logging - debug
-    #     status_return=temp.get('status')
-    # elif 'error' in temp:
-    #     status_return=temp.get('error')
-    #code_return = response.status_code 
-    # get status for logging
     temp_item_id=temp.get('item_id') # get item_id for future delete call
 
-    #print("in create ", [status_return,code_return,temp_item_id])
     return [temp_item_id, temp, response.status_code]
 
 def deleteCall():
@@ -83,17 +69,9 @@ def deleteCall():
         status_return=temp.get('status')
     elif 'error' in temp:
         status_return=temp.get('error')
-    #code_return = response.status_code
-    #print("in delete",[status_return,code_return])
     return [status_return,temp, response.status_code]
 
 def log(inp, code, call):
-    # log in the following format: timestamp || Code || Status (message)
-    # split into two files: errors and complete archive
-    # input: json
-    # things to parse for: code, status (status is also called error), item id, token generated
-    # token generated IS the response for the token call lmao
-    # try a for loop and see what happens
     print("\nStart Log Test:\n",inp)
     for x in inp:
         print(x)
@@ -112,8 +90,6 @@ def log(inp, code, call):
         dict["item_id"] = inp.get('item_id')
     if inp.get('error') != None:
         dict['error'] = inp.get('error')
-    # two files: error file and logging file
-    # if no error, logging - if error, error file
     file_name = 'test.json'
     print("create file", code)
     if not os.path.exists(file_name):
@@ -129,9 +105,7 @@ def log(inp, code, call):
     data.update({form_curr_time:dict})
     with open(file_name, 'w+') as f2:
         json.dump(data, f2,indent=4)
-    #print(dict)
-    #print(form_curr_time)
-    #print(inp.get('notInThere'))
+
 
 tokenRet = tokenCall()
 token = tokenRet[0]
@@ -143,6 +117,3 @@ time.sleep(1) # without this python kinda dies and doesn't do all the writes in 
 log(createRet[1],createRet[2],"create")
 time.sleep(1)
 log(deleteRet[1],deleteRet[2],"delete")
-# Print the response - debug
-# print(response.json())
-# print(response.status_code)
