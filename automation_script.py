@@ -73,7 +73,7 @@ def createCall():
     'token': token
     }
     try:
-        response = requests.post(url + createUrl, headers=creationHeader) # returns {"status": "item created", "item_id": item_id}
+        response = requests.post(url + createUrl, headers=creationHeader,json={'test':'THIS IS A BODY FOR USER REQUEST SIZE'}) # returns {"status": "item created", "item_id": item_id}
         status_code = response.status_code
         if status_code == 201:
             temp = response.json()
