@@ -13,8 +13,8 @@ deleteUrl = "/api/items/{0}"#needs to be formatted
 tokenUrl="/api/token"
 
 #other stuff to track
-userID="PLACEHOLDER"
-token=""
+userID="guest"
+token="PLACEHOLDER"
 temp_item_id=0 #maybe have a list of item ids???
 
 '''
@@ -57,6 +57,7 @@ def tokenCall():
         token=temp.get('token')
         status_code = response.status_code
         db_logger('INFO', status_code, f"Success: Token obtained: {token}")
+        return [token, temp, response.status_code]
     except Exception as e:
         db_logger('ERROR', status_code, f"Failed to obtain token: {e}")
     
@@ -71,10 +72,11 @@ def createCall():
         response = requests.post(url + createUrl, headers=creationHeader) # returns {"status": "item created", "item_id": item_id}
         temp=response.json()
         #extract item_id
-        temp=response.json()
         status_code = response.status_code
         temp_item_id=temp.get('item_id')
+        print(temp)
         db_logger('INFO', status_code, f"Item created successfully: {temp_item_id}")
+        return [temp_item_id, temp, response.status_code]
     except Exception as e:
         db_logger('ERROR', status_code, f"Failed to create item: {e}")
 
@@ -88,10 +90,22 @@ def deleteCall():
         # process item id
         tempDeleteUrl = deleteUrl.format(temp_item_id)
         #actually make the api call
-        response = requests.get(url + tempDeleteUrl, headers=deletionHeader)
+        response = requests.delete(url + tempDeleteUrl, headers=deletionHeader)
         # we don't need to store anything from it other than the response itself
+        temp=response.json()
+        code_return = -1
+        status_return="failed function"
+        print("entire delete response:",temp)
+        if 'status' in temp:
+            status_return=temp.get('status')
+        elif 'error' in temp:
+            status_return=temp.get('error')
+        #code_return = response.status_code
+        #print("in delete",[status_return,code_return])
         status_code = response.status_code
+        print(response)
         db_logger('INFO', status_code, f"Item deleted successfully: {temp_item_id}")
+        return [status_return,temp, response.status_code]
     except Exception as e:
         db_logger('ERROR', status_code, f"Failed to delete item {temp_item_id}: {e}")
 
@@ -99,6 +113,8 @@ def deleteCall():
 # print(response.json())
 # print(response.status_code)
 
-tokenCall()
-createCall()
-deleteCall()
+tokenRet = tokenCall()
+token = tokenRet[0]
+createRet = createCall()
+temp_item_id = createRet[0]
+deleteRet = deleteCall()
