@@ -12,7 +12,7 @@ ACTIVE_USERS = Gauge('active_users', 'Number of active users')
 ERROR_RATE = Counter('error_rate', 'Number of errors')
 REQUEST_LATENCY = Histogram('request_latency', 'Latency of requests')
 TOTAL_ITEMS_CREATED = Counter('total_items_created', 'Total number of items created by users')
-USER_ACTIVITY = Counter('user_activity', 'Number of actions taken by users')
+USER_ACTIVITY = Counter('user_activity', 'Number of actions taken by users', ['user_id'])
 
 # Data stores
 active_users = set()
