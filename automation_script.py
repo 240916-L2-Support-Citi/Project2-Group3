@@ -1,12 +1,12 @@
 from flask import Flask, jsonify
-from prometheus_client import Counter, Histogram, Gauge, generate_latest
-import time, random, string, logging
+#from prometheus_client import Counter, Histogram, Gauge, generate_latest
+import time, random#, string, logging
 import requests
 import psycopg 
 # imports ripped from p2 specs - a lot of them are useless for this script
 # API endpoints
-EC2_DNS = ''
-url = f'http://ec2-52-71-30-180.compute-1.amazonaws.com:5000/'
+EC2_DNS = '' #TODO put in the ec2dns here
+url = f'http://{EC2_DNS}:5000'
 metricsUrl="/metrics"
 createUrl = "/api/items"
 deleteUrl = "/api/items/{0}"#needs to be formatted
@@ -26,7 +26,7 @@ TODO
 # obtain a token
 def db_logger(log_level, status_code, message):
     try:
-        conn = psycopg.connect("dbname=api_logs user=")
+        conn = psycopg.connect("dbname=api_logs user=PLACEHOLDER") #TODO put in the database name and user here
         cur = conn.cursor()
 
         cur.execute("""
@@ -99,7 +99,7 @@ def deleteCall():
         response = requests.delete(url + tempDeleteUrl, headers=deletionHeader)
         # we don't need to store anything from it other than the response itself
         status_code = response.status_code
-        print(response)
+        #print(response)
         if status_code == 200:
             temp = response.json()
             status_return = temp.get('status', 'Unknown status')
@@ -115,8 +115,33 @@ def deleteCall():
 # print(response.json())
 # print(response.status_code)
 
-tokenRet = tokenCall()
-token = tokenRet[0]
-createRet = createCall()
-temp_item_id = createRet[0]
-deleteRet = deleteCall()
+if __name__ == "__main__":
+    while True:
+        sleepTime = 5
+        ranErr = random.randint(0, 5) #0 = create error, 1 = delete error, 2=both error, else ok
+        print("Start cycle")
+        #obtain token - no errors possible
+        tokenRet = tokenCall()
+        token = tokenRet[0] # set for create
+        
+        # create item; error possible
+        if ranErr == 0:
+            token=""
+            print("Simulating only Create Error")
+        elif ranErr == 2:
+            token=""
+            print("Simulating Create and Delete Error")
+        createRet = createCall()
+        temp_item_id = createRet[0]# set for delete
+
+        #delete item; error possible
+        if ranErr == 0:
+            print("Delete Skipped")
+            continue
+        elif ranErr == 1 or ranErr == 2:
+            temp_item_id = None
+            print("Simulating Delete Error")
+        deleteRet = deleteCall()
+
+        print(f"Sleep for {sleepTime}")
+        time.sleep(sleepTime)
