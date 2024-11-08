@@ -44,6 +44,8 @@ def create_item():
         return jsonify({"error": "Unauthorized"}), 403
 
     try:
+        active_users.add(user_id)
+        ACTIVE_USERS.set(len(active_users))
         REQUEST_COUNT.inc()
         size = len(request.data) if request.data else 0
         AVG_REQUEST_SIZE.set(size)
